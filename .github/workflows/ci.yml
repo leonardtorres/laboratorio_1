@@ -1,0 +1,48 @@
+name: CI
+on:
+  push:
+    paths: ['src/**', 'tests/**', 'data/**',        # B3: solo
+            'requirements.txt', '.github/**']        # lo relevante
+  pull_request:
+ 
+jobs:
+  lint:                                # B3: lo barato primero
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11', cache: 'pip' }   # B3: cache
+      - run: pip install -r requirements.txt
+      - run: flake8 src tests --max-line-length=100
+
+  test:                              
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11', cache: 'pip' }
+      - run: pip install -r requirements.txt
+      - run: mkdir -p reports output
+      - name: Suite con reportes            # B1: junit + cobertura
+        run: pytest --junitxml=reports/junit.xml \
+               --cov=src --cov-report=term-missing --cov-report=html \
+               --cov-fail-under=90
+      - name: Pipeline de datos
+        run: python run_pipeline.py --input data/ventas.csv \
+               --output output/totales.csv
+      - name: Job Summary                   # B1: resumen visible
+        if: always()
+        run: |
+          echo '## Resumen del pipeline' >> $GITHUB_STEP_SUMMARY
+          cat output/resumen.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+      - uses: actions/upload-artifact@v4    # B1: artifacts
+        if: always()
+        with:
+          name: reportes
+          path: |
+            reports/
+            htmlcov/
+            output/
