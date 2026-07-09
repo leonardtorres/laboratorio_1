@@ -1,8 +1,10 @@
-import pandas as pd, pytest
- 
+import pandas as pd
+import pytest
+
 pytestmark = pytest.mark.datos
 UMBRAL = 0.30   # criterio de aceptación: máx. 30% de filas inválidas
- 
+
+
 def test_montos_invalidos_bajo_umbral():
     df = pd.read_csv('data/ventas.csv')
     invalidos = df['Monto'].isna() | (df['Monto'] <= 0)
