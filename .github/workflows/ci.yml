@@ -27,11 +27,13 @@ jobs:
       - run: pip install -r requirements.txt
       - run: mkdir -p reports output
       - name: Suite con reportes            # B1: junit + cobertura
-        run: pytest --junitxml=reports/junit.xml \
+        run: | 
+          pytest --junitxml=reports/junit.xml \
                --cov=src --cov-report=term-missing --cov-report=html \
                --cov-fail-under=90
       - name: Pipeline de datos
-        run: python run_pipeline.py --input data/ventas.csv \
+        run: | 
+          python run_pipeline.py --input data/ventas.csv \
                --output output/totales.csv
       - name: Job Summary                   # B1: resumen visible
         if: always()
